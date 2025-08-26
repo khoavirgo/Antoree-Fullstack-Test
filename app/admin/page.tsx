@@ -1,10 +1,19 @@
 "use client"
 import { useEffect, useState } from "react"
 
+type Stats = {
+    visits: number
+    leads: number
+    orders: number
+    revenue: number
+    crLead: number
+    crRev: number
+}
+
 export default function AdminPage() {
-    const [key, setKey] = useState("")
-    const [stats, setStats] = useState<any>(null)
-    const [err, setErr] = useState("")
+    const [key, setKey] = useState<string>("")
+    const [stats, setStats] = useState<Stats | null>(null)
+    const [err, setErr] = useState<string>("")
 
     async function load() {
         setErr("")
@@ -12,9 +21,10 @@ export default function AdminPage() {
             const res = await fetch("/api/stats", { headers: { "x-admin-key": key } })
             const json = await res.json()
             if (!json.ok) throw new Error(json.error || "ERR")
-            setStats(json.data)
-        } catch (e: any) {
-            setErr(e.message || "Lỗi")
+            setStats(json.data as Stats)
+        } catch (e) {
+            const error = e instanceof Error ? e.message : 'Lỗi';
+            setErr(error)
             setStats(null)
         }
     }

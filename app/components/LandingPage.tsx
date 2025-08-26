@@ -1,70 +1,13 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react"
+import LeadModal from "./LeadModal";
+import { postJSON } from "@/lib/fetcher";
 
-// === Helper: simple fetch wrapper ===
-async function postJSON(url: string, data: any) {
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        })
-        return await res.json().catch(() => ({}))
-    } catch (e: any) {
-        console.error(e)
-        return { ok: false, error: e?.message }
-    }
-}
-
-// === Lead Modal (client) ===
-function LeadModal({ onClose }: { onClose: () => void }) {
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
-
-    async function submit() {
-        const payload = { name, email, ts: Date.now(), source: "landing" }
-        await postJSON("/api/leads", payload)
-        onClose()
-    }
-
-    return (
-        <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-black/30">
-            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow">
-                <h3 className="text-lg font-semibold text-gray-900">Đăng ký nhận tư vấn miễn phí</h3>
-                <input
-                    className="mt-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900"
-                    placeholder="Họ và tên"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <input
-                    className="mt-3 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <div className="mt-5 flex gap-3">
-                    <button
-                        onClick={submit}
-                        className="flex-1 rounded-xl bg-black text-white px-4 py-2 font-medium"
-                    >
-                        Gửi
-                    </button>
-                    <button onClick={onClose} className="rounded-xl border border-gray-200 px-4 py-2 text-gray-700">
-                        Hủy
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-// === Landing Page component (client) ===
 export default function LandingPage() {
-    const [openLead, setOpenLead] = useState(false)
+    const [openLead, setOpenLead] = useState<boolean>(false)
     const [toast, setToast] = useState<{ msg: string } | null>(null)
 
-    const plans = useMemo(
+    const plans: Plan[] = useMemo(
         () => [
             {
                 name: "Starter",
@@ -110,7 +53,7 @@ export default function LandingPage() {
         }
     }, [])
 
-    const track = (event: string, meta: any = {}) => {
+    const track = (event: string, meta: Record<string, unknown> = {}) => {
         postJSON("/api/track", { event, ts: Date.now(), page: "landing", ...meta })
     }
 
