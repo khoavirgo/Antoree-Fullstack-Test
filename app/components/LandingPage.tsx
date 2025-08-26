@@ -122,9 +122,6 @@ export default function LandingPage() {
                         English Lab
                     </a>
                     <nav className="hidden md:flex gap-6 text-sm text-gray-700">
-                        <a href="#pricing" className="hover:text-gray-900">
-                            Học phí
-                        </a>
                         <a href="/admin" className="hover:text-gray-900">
                             Dashboard
                         </a>
