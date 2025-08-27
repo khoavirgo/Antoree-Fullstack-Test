@@ -19,19 +19,37 @@ model Lead {
   id        Int      @id @default(autoincrement())
   name      String
   email     String
-  phone     String
+  phone     String?
   source    String?
   createdAt DateTime @default(now())
   orders    Order[]
 }
 
-model Order {
+model Course {
   id        Int      @id @default(autoincrement())
-  leadId    Int?
-  amount    Int
-  plan      String?
+  sku       String   @unique
+  title     String
+  description String?
+  price     Int
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
 
-  // relation đến Lead; optional vì leadId có thể null
-  lead Lead? @relation(fields: [leadId], references: [id])
+model Order {
+  id         Int      @id @default(autoincrement())
+  leadId     Int?
+  courseId   Int?
+  amount     Int
+  status     String   @default("pending")
+  provider   String?
+  providerId String?
+  createdAt  DateTime @default(now())
+
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+  course Course? @relation(fields: [courseId], references: [id])
+
+  @@index([status])
+  @@index([courseId])
 }

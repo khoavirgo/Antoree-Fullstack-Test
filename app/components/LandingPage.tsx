@@ -1,49 +1,37 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react"
 import LeadModal from "./LeadModal";
-import { postJSON } from "@/lib/fetcher";
+import { postJSON, getJSON } from "@/lib/fetcher";
 
 export default function LandingPage() {
     const [openLead, setOpenLead] = useState<boolean>(false)
     const [toast, setToast] = useState<{ msg: string } | null>(null)
+    const [plans, setPlans] = useState<Plan[]>([])
 
-    const plans: Plan[] = useMemo(
-        () => [
-            {
-                name: "Starter",
-                price: "0₫",
-                tagline: "Dùng thử 7 ngày",
-                features: ["2 bài học nền tảng", "1 đề mini test", "Group hỗ trợ cộng đồng"],
-                ctaLabel: "Bắt đầu miễn phí",
-            },
-            {
-                name: "Standard",
-                price: "1.290.000₫",
-                tagline: "Lộ trình TOEIC 700+ trong 8 tuần",
-                features: [
-                    "32 video bài giảng",
-                    "8 đề thi chuẩn + chấm tự động",
-                    "Feedback hàng tuần từ mentor",
-                    "Flashcard & tracker tiến độ",
-                ],
-                ctaLabel: "Đăng ký Standard",
-                highlighted: true,
-            },
-            {
-                name: "Premium",
-                price: "2.890.000₫",
-                tagline: "Cam kết hoàn tiền nếu không tăng ≥150 điểm",
-                features: [
-                    "Mọi tính năng Standard",
-                    "1-1 coaching (4 buổi)",
-                    "Sửa bài chi tiết + lộ trình cá nhân hóa",
-                    "Mock interview + định hướng học thuật",
-                ],
-                ctaLabel: "Đăng ký Premium",
-            },
-        ],
-        []
-    )
+    useEffect(() => {
+        async function load() {
+            const res = await getJSON("/api/courses");
+            if (res?.ok && Array.isArray(res.data)) {
+                // inside useEffect load() mapping
+                const mapped = res.data.map((c: any) => ({
+                    name: c.title,
+                    price: c.price === 0 ? "0₫" : `${c.price.toLocaleString("vi-VN")}₫`,
+                    tagline: c.description ? (c.description.length > 120 ? c.description.slice(0, 117) + "..." : c.description) : "",
+                    features: [],
+                    ctaLabel: "Đăng ký",
+                }));
+                setPlans(mapped);
+            } else {
+                // fallback to default hard-coded plans if API fails
+                setPlans([
+                    { name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài..."], ctaLabel: "Bắt đầu miễn phí" },
+                    { name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["..."], ctaLabel: "Đăng ký Standard" },
+                    { name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền", features: ["..."], ctaLabel: "Đăng ký Premium" },
+                ]);
+            }
+        }
+        load();
+    }, []);
 
     useEffect(() => {
         const key = "lp_traffic_seen"
@@ -64,11 +52,11 @@ export default function LandingPage() {
                     <a href="#top" className="font-bold text-lg text-gray-900">
                         English Lab
                     </a>
-                    <nav className="hidden md:flex gap-6 text-sm text-gray-700">
+                    {/* <nav className="hidden md:flex gap-6 text-sm text-gray-700">
                         <a href="/admin" className="hover:text-gray-900">
                             Dashboard
                         </a>
-                    </nav>
+                    </nav> */}
                     <button
                         onClick={() => setOpenLead(true)}
                         className="rounded-2xl border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 transition text-gray-900"

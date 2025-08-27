@@ -33,7 +33,7 @@ export default function LeadModal({ onClose }: { onClose: () => void }) {
                         onClick={submit}
                         className="flex-1 rounded-xl bg-black text-white px-4 py-2 font-medium"
                     >
-                        Gửi
+                        Đăng ký
                     </button>
                     <button
                         onClick={onClose}
