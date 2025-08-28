@@ -64,7 +64,7 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
             <form
                 onSubmit={handleSubmit}
-                className="w-full max-w-lg bg-white rounded-xl p-6 shadow-lg space-y-4"
+                className="w-full max-w-md bg-white rounded-xl p-6 shadow-lg flex flex-col max-h-[90vh]"
             >
                 <h2 className="text-2xl font-semibold mb-4">
                     {course ? "Edit Course" : "Create Course"}

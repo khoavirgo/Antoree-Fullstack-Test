@@ -1,10 +1,11 @@
 "use client"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import LeadModal from "./LeadModal";
 import { postJSON, getJSON } from "@/lib/fetcher";
+import { CheckCircle, X } from "lucide-react";
 
 export default function LandingPage() {
-    const [openLead, setOpenLead] = useState<boolean>(false)
+    const [openLead, setOpenLead] = useState(false)
     const [toast, setToast] = useState<{ msg: string } | null>(null)
     const [plans, setPlans] = useState<Plan[]>([])
 
@@ -12,21 +13,19 @@ export default function LandingPage() {
         async function load() {
             const res = await getJSON("/api/courses");
             if (res?.ok && Array.isArray(res.data)) {
-                // inside useEffect load() mapping
                 const mapped = res.data.map((c: any) => ({
                     name: c.title,
                     price: c.price === 0 ? "0₫" : `${c.price.toLocaleString("vi-VN")}₫`,
                     tagline: c.description ? (c.description.length > 120 ? c.description.slice(0, 117) + "..." : c.description) : "",
                     features: [],
-                    ctaLabel: "Đăng ký",
+                    ctaLabel: "Đăng ký nhận tư vấn",
                 }));
                 setPlans(mapped);
             } else {
-                // fallback to default hard-coded plans if API fails
                 setPlans([
-                    { name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài..."], ctaLabel: "Bắt đầu miễn phí" },
-                    { name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["..."], ctaLabel: "Đăng ký Standard" },
-                    { name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền", features: ["..."], ctaLabel: "Đăng ký Premium" },
+                    { name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài học mẫu", "Không cần thẻ tín dụng"], ctaLabel: "Bắt đầu miễn phí" },
+                    { name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["50+ bài giảng", "Lộ trình học 3 tháng", "Hỗ trợ giảng viên"], ctaLabel: "Đăng ký Standard" },
+                    { name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền nếu không đạt", features: ["Tất cả từ Standard", "Kèm 1-1 hàng tuần", "Thi thử & feedback cá nhân"], ctaLabel: "Đăng ký Premium" },
                 ]);
             }
         }
@@ -46,59 +45,94 @@ export default function LandingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white text-gray-900">
-            <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-900">
+            {/* Header */}
+            <header className="sticky top-0 z-40 bg-white/70 backdrop-blur border-b border-gray-200">
                 <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-                    <a href="#top" className="font-bold text-lg text-gray-900">
+                    <a href="#top" className="font-extrabold text-xl text-indigo-600 tracking-tight">
                         English Lab
                     </a>
-                    {/* <nav className="hidden md:flex gap-6 text-sm text-gray-700">
-                        <a href="/admin" className="hover:text-gray-900">
-                            Dashboard
-                        </a>
-                    </nav> */}
                     <button
                         onClick={() => setOpenLead(true)}
-                        className="rounded-2xl border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 transition text-gray-900"
+                        className="rounded-full border border-gray-300 px-5 py-2 text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-gray-900 cursor-pointer"
                     >
-                        Đăng ký tư vấn
+                        Đăng ký nhận tư vấn
                     </button>
                 </div>
             </header>
 
+            {/* Hero Section */}
+            <section className="mx-auto max-w-6xl px-4 pt-20 pb-16 text-center">
+                <h1 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+                    Nâng trình tiếng Anh của bạn <br /> với <span className="text-indigo-600">English Lab</span>
+                </h1>
+                <p className="mt-4 text-gray-600 max-w-2xl mx-auto text-lg">
+                    Lộ trình học thông minh, giảng viên đồng hành, và cam kết kết quả thực tế.
+                </p>
+                <div className="mt-6 flex justify-center gap-4">
+                    <button
+                        onClick={() => setOpenLead(true)}
+                        className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md transition cursor-pointer"
+                    >
+                        Bắt đầu ngay
+                    </button>
+                    <a href="#pricing" className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition">
+                        Xem các gói học
+                    </a>
+                </div>
+            </section>
+
+            {/* Pricing Section */}
             <section id="pricing" className="mx-auto max-w-6xl px-4 py-16">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Chọn gói học phù hợp</h2>
-                <div className="mt-8 grid md:grid-cols-3 gap-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900">Chọn gói học phù hợp</h2>
+                <div className="mt-10 grid md:grid-cols-3 gap-6">
                     {plans.map((p) => (
-                        <div key={p.name} className="rounded-2xl border p-6 bg-gray-50 border-gray-200">
+                        <div key={p.name} className="rounded-2xl border p-6 bg-gray-50 border-gray-200 shadow hover:shadow-lg transition">
                             <div className="flex items-baseline justify-between">
                                 <div className="text-lg font-semibold text-gray-800">{p.name}</div>
                                 <div className="text-xl font-bold text-gray-900">{p.price}</div>
                             </div>
                             <div className="mt-1 text-sm text-gray-600">{p.tagline}</div>
+
+                            {/* ⭐ Mock review */}
+                            <div className="mt-3 flex items-center gap-2 text-yellow-500">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                    <span key={i}>★</span>
+                                ))}
+                                <span className="text-gray-600 text-sm">({Math.floor(Math.random() * 50) + 10} reviews)</span>
+                            </div>
+
                             <ul className="mt-4 space-y-2 text-sm text-gray-700">
                                 {p.features.map((f) => (
-                                    <li key={f}>{f}</li>
+                                    <li key={f}>• {f}</li>
                                 ))}
                             </ul>
+
                             <button
                                 onClick={() => {
-                                    setOpenLead(true)
-                                    track("cta_choose_plan", { plan: p.name })
+                                    setOpenLead(true);
+                                    track("cta_choose_plan", { plan: p.name });
                                 }}
-                                className="mt-6 w-full px-5 py-3 rounded-xl border border-gray-300 bg-black text-white hover:opacity-90"
+                                className="mt-6 w-full px-5 py-3 rounded-xl border border-gray-300 bg-black text-white hover:opacity-90 transition cursor-pointer"
                             >
                                 {p.ctaLabel}
                             </button>
                         </div>
+
                     ))}
                 </div>
             </section>
 
+            {/* Modal */}
             {openLead && <LeadModal onClose={() => setOpenLead(false)} />}
+
+            {/* Toast */}
             {toast && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl bg-black text-white px-4 py-2 shadow-lg">
-                    {toast.msg}
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl bg-black text-white px-4 py-3 shadow-lg flex items-center gap-2">
+                    <span>{toast.msg}</span>
+                    <button onClick={() => setToast(null)}>
+                        <X className="w-4 h-4 text-white" />
+                    </button>
                 </div>
             )}
         </div>

@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
 import { useState } from "react";
 import { CourseList } from "../components/admin/course/CourseList";
 import { CourseForm } from "../components/admin/course/CourseForm";
 import { useCourses } from "../components/admin/course/useCourse";
 import { TeacherList } from "../components/admin/teacher/TeacherList";
-import { TeacherForm } from "../components/admin/teacher/TeacherForm";
+import TeacherForm from "../components/admin/teacher/TeacherForm";
 import { useTeachers } from "../components/admin/teacher/useTeacher";
 import { LoginForm } from "./login/LoginForm";
 
@@ -18,7 +18,7 @@ export default function AdminPage() {
     const { courses, loadCourses, createCourse, updateCourse, deleteCourse } = useCourses(adminKey);
     const { teachers, loadTeachers, createTeacher, updateTeacher, deleteTeacher } = useTeachers(adminKey);
 
-    const [tab, setTab] = useState<'courses' | 'teachers'>('courses');
+    const [tab, setTab] = useState<"courses" | "teachers">("courses");
 
     const [openCourseForm, setOpenCourseForm] = useState(false);
     const [editCourse, setEditCourse] = useState<Course | null>(null);
@@ -51,7 +51,10 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                     <button
                         className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                        onClick={() => { localStorage.removeItem("admin_key"); setLoggedIn(false); }}
+                        onClick={() => {
+                            localStorage.removeItem("admin_key");
+                            setLoggedIn(false);
+                        }}
                     >
                         Logout
                     </button>
@@ -60,26 +63,31 @@ export default function AdminPage() {
                 {/* Tabs */}
                 <div className="flex gap-4 mb-4 border-b">
                     <button
-                        className={`px-4 py-2 font-medium ${tab === 'courses' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-                        onClick={() => setTab('courses')}
+                        className={`px-4 py-2 font-medium ${tab === "courses" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                            }`}
+                        onClick={() => setTab("courses")}
                     >
                         Courses
                     </button>
                     <button
-                        className={`px-4 py-2 font-medium ${tab === 'teachers' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-                        onClick={() => setTab('teachers')}
+                        className={`px-4 py-2 font-medium ${tab === "teachers" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                            }`}
+                        onClick={() => setTab("teachers")}
                     >
                         Teachers
                     </button>
                 </div>
 
                 {/* Content */}
-                {tab === 'courses' && (
+                {tab === "courses" && (
                     <div>
                         <div className="flex justify-end mb-3">
                             <button
                                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                                onClick={() => { setEditCourse(null); setOpenCourseForm(true); }}
+                                onClick={() => {
+                                    setEditCourse(null);
+                                    setOpenCourseForm(true);
+                                }}
                             >
                                 New Course
                             </button>
@@ -87,7 +95,10 @@ export default function AdminPage() {
 
                         <CourseList
                             courses={courses}
-                            onEdit={(c) => { setEditCourse(c); setOpenCourseForm(true); }}
+                            onEdit={(c) => {
+                                setEditCourse(c);
+                                setOpenCourseForm(true);
+                            }}
                             onDelete={(c) => setDeleteTargetCourse(c)}
                         />
 
@@ -111,8 +122,15 @@ export default function AdminPage() {
                                     <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
                                     <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetCourse.title} không?</p>
                                     <div className="flex justify-end gap-3">
-                                        <button onClick={() => setDeleteTargetCourse(null)} className="px-4 py-2 rounded border">Hủy</button>
-                                        <button onClick={handleConfirmDeleteCourse} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
+                                        <button onClick={() => setDeleteTargetCourse(null)} className="px-4 py-2 rounded border">
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={handleConfirmDeleteCourse}
+                                            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                                        >
+                                            Xóa
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -120,21 +138,29 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {tab === 'teachers' && (
+                {tab === "teachers" && (
                     <div>
                         <div className="flex justify-end mb-3">
                             <button
                                 className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-                                onClick={() => { setEditTeacher(null); setOpenTeacherForm(true); }}
+                                onClick={() => {
+                                    setEditTeacher(null);
+                                    setOpenTeacherForm(true);
+                                }}
                             >
                                 New Teacher
                             </button>
                         </div>
+
                         <TeacherList
                             teachers={teachers}
-                            onEdit={(t) => { setEditTeacher(t); setOpenTeacherForm(true); }}
+                            onEdit={(t) => {
+                                setEditTeacher(t);
+                                setOpenTeacherForm(true);
+                            }}
                             onDelete={(t) => setDeleteTargetTeacher(t)}
                         />
+
                         {openTeacherForm && (
                             <TeacherForm
                                 teacher={editTeacher}
@@ -154,8 +180,17 @@ export default function AdminPage() {
                                     <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
                                     <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetTeacher.name} không?</p>
                                     <div className="flex justify-end gap-3">
-                                        <button onClick={() => setDeleteTargetTeacher(null)} className="px-4 py-2 rounded border">Hủy</button>
-                                        <button onClick={handleConfirmDeleteTeacher} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
+                                        <button onClick={() => setDeleteTargetTeacher(null)} className="px-4 py-2 rounded border">
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                await handleConfirmDeleteTeacher();
+                                            }}
+                                            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                                        >
+                                            Xóa
+                                        </button>
                                     </div>
                                 </div>
                             </div>

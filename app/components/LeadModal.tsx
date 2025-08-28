@@ -5,6 +5,7 @@ import { postJSON } from "../../lib/fetcher"
 export default function LeadModal({ onClose }: { onClose: () => void }) {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
+    const [phone, setPhone] = useState("")
 
     async function submit() {
         const payload = { name, email, ts: Date.now(), source: "landing" }
@@ -22,22 +23,31 @@ export default function LeadModal({ onClose }: { onClose: () => void }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
+
+                <input
+                    className="mt-3 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900"
+                    placeholder="Số điện thoại"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                />
+
                 <input
                     className="mt-3 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
+
                 <div className="mt-5 flex gap-3">
                     <button
                         onClick={submit}
-                        className="flex-1 rounded-xl bg-black text-white px-4 py-2 font-medium"
+                        className="flex-1 rounded-xl bg-black text-white px-4 py-2 font-medium cursor-pointer"
                     >
                         Đăng ký
                     </button>
                     <button
                         onClick={onClose}
-                        className="rounded-xl border border-gray-200 px-4 py-2 text-gray-700"
+                        className="rounded-xl border border-gray-200 px-4 py-2 text-gray-700 cursor-pointer"
                     >
                         Hủy
                     </button>

@@ -1,79 +1,77 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 
 export function useTeachers(adminKey: string | null) {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  function adminFetch(url: string, opts: RequestInit = {}) {
-    const headers = {
-      ...(opts.headers || {}),
-      "Content-Type": "application/json",
-    } as any;
-    if (adminKey) headers["x-admin-key"] = adminKey;
-    return fetch(url, { ...opts, headers, credentials: "same-origin" });
-  }
-
-  const loadTeachers = async () => {
+  const loadTeachers = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
-      const res = await adminFetch("/api/teachers");
-      if (!res.ok) throw new Error(`Failed to load teachers (${res.status})`);
+      const res = await fetch("/api/teachers", { cache: "no-store" });
       const json = await res.json();
-      if (!json.ok) throw new Error(json.error || "Invalid response");
-      setTeachers(json.data || []);
-    } catch (e: any) {
-      setError(e?.message || "Load error");
+      if (json.ok) setTeachers(json.data as Teacher[]);
+      else throw new Error(json.error || "Failed to load teachers");
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadTeachers();
+  }, [loadTeachers]);
+
+  const createTeacher = async (data: TeacherFormData) => {
+    const fd = new FormData();
+    fd.append("name", data.name);
+    fd.append("email", data.email);
+    fd.append("phone", data.phone);
+    fd.append("education", data.education);
+    fd.append("achievements", data.achievements);
+    if (data.avatar) fd.append("avatar", data.avatar);
+
+    const res = await fetch("/api/teachers", {
+      method: "POST",
+      body: fd,
+      headers: adminKey ? { "x-admin-key": adminKey } : undefined,
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.ok) throw new Error(json.error || "Create failed");
   };
 
-  const createTeacher = async (data: Partial<Teacher>) => {
-    try {
-      const res = await adminFetch("/api/teachers", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`Create failed ${res.status}`);
-      await loadTeachers();
-    } catch (e: any) {
-      setError(e?.message || "Create error");
-    }
-  };
+  const updateTeacher = async (id: number, data: TeacherFormData) => {
+    const fd = new FormData();
+    fd.append("name", data.name);
+    fd.append("email", data.email);
+    fd.append("phone", data.phone);
+    fd.append("education", data.education);
+    fd.append("achievements", data.achievements);
+    if (data.avatar) fd.append("avatar", data.avatar);
 
-  const updateTeacher = async (id: number, data: Partial<Teacher>) => {
-    try {
-      const res = await adminFetch(`/api/teachers/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`Update failed ${res.status}`);
-      await loadTeachers();
-    } catch (e: any) {
-      setError(e?.message || "Update error");
-    }
+    const res = await fetch(`/api/teachers/${id}`, {
+      method: "PUT",
+      body: fd,
+      headers: adminKey ? { "x-admin-key": adminKey } : undefined,
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
   };
 
   const deleteTeacher = async (id: number) => {
-    try {
-      const res = await adminFetch(`/api/teachers/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`Delete failed ${res.status}`);
-      await loadTeachers();
-    } catch (e: any) {
-      setError(e?.message || "Delete error");
-    }
+    const res = await fetch(`/api/teachers/${id}`, {
+      method: "DELETE",
+      headers: adminKey ? { "x-admin-key": adminKey } : undefined,
+    });
+    const json = await res.json();
+    if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
   };
-
-  useEffect(() => {
-    if (adminKey) loadTeachers();
-  }, [adminKey]);
 
   return {
     teachers,
     loading,
-    error,
     loadTeachers,
     createTeacher,
     updateTeacher,

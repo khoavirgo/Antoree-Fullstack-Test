@@ -46,6 +46,9 @@ model Teacher {
   name      String
   email     String   @unique
   phone     String?
+  education String?   
+  achievements String? 
+  avatarUrl String?
   createdAt DateTime @default(now())
 
   courses   Course[]
