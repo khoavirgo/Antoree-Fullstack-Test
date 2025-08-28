@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     const description =
       body.description !== undefined ? String(body.description).trim() : null;
     const price = Number(body.price ?? 0);
+    const teacherId = Number(body.teacherId);
 
     if (!title || !sku || !Number.isInteger(price) || price < 0) {
       return NextResponse.json(
@@ -33,7 +34,14 @@ export async function POST(req: Request) {
     }
 
     const course = await prisma.course.create({
-      data: { title, sku, description, price, active: body.active ?? true },
+      data: {
+        title,
+        sku,
+        description,
+        teacherId,
+        price,
+        active: body.active ?? true,
+      },
     });
 
     return NextResponse.json({ ok: true, data: course }, { status: 201 });

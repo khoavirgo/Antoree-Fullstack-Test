@@ -1,87 +1,34 @@
-"use client";
+import React, { Dispatch, SetStateAction } from "react";
 
-import React, { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+interface LoginFormProps {
+    setAdminKey: Dispatch<SetStateAction<string | null>>;
+    setLoggedIn: Dispatch<SetStateAction<boolean>>;
+}
 
-export default function LoginForm() {
-    const [key, setKey] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [err, setErr] = useState<string | null>(null);
+export function LoginForm({ setAdminKey, setLoggedIn }: LoginFormProps) {
+    const [adminKey, setKey] = React.useState("");
 
-    const router = useRouter();
-    const params = useSearchParams();
-    const next = params?.get("next") || "/admin";
-
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        setLoading(true);
-        setErr(null);
-
-        try {
-            const res = await fetch("/api/admin/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ key }),
-            });
-
-            const ct = res.headers.get("content-type") || "";
-
-            if (!res.ok) {
-                if (ct.includes("application/json")) {
-                    const json = await res.json();
-                    setErr(json?.error || "Invalid key");
-                } else {
-                    setErr("Unexpected non-JSON response from server");
-                }
-                setLoading(false);
-                return;
-            }
-
-            if (ct.includes("application/json")) {
-                const json = await res.json();
-                if (json.ok) {
-                    router.push(next);
-                } else {
-                    setErr(json.error || "Invalid key");
-                }
-            } else {
-                setErr("Unexpected non-JSON response from server");
-            }
-        } catch (e: any) {
-            setErr(e?.message || "Server error");
-        } finally {
-            setLoading(false);
-        }
-    }
+    const tryLogin = () => {
+        if (!adminKey) return;
+        localStorage.setItem("admin_key", adminKey);
+        setAdminKey(adminKey);
+        setLoggedIn(true);
+    };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-md bg-white p-6 rounded shadow"
-        >
-            <h2 className="text-xl font-semibold mb-4">Admin login</h2>
-
-            <label className="block mb-2 text-sm">
-                Admin key
+        <div className="min-h-screen grid place-items-center bg-gray-50 p-6">
+            <div className="w-full max-w-md bg-white p-6 rounded shadow">
+                <h2 className="text-xl font-semibold mb-4">Admin login</h2>
                 <input
-                    value={key}
+                    value={adminKey}
                     onChange={(e) => setKey(e.target.value)}
-                    className="mt-1 block w-full rounded border px-3 py-2"
-                    placeholder="Enter admin key"
+                    className="w-full rounded border px-3 py-2 mb-3"
+                    placeholder="Nhập admin key"
                 />
-            </label>
-
-            {err && <div className="text-red-600 mb-2">{err}</div>}
-
-            <div className="flex justify-end gap-3">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 rounded bg-black text-white"
-                >
-                    {loading ? "Signing in..." : "Sign in"}
+                <button onClick={tryLogin} className="px-4 py-2 rounded bg-black text-white">
+                    Sign in
                 </button>
             </div>
-        </form>
+        </div>
     );
 }

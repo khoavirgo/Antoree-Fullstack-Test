@@ -1,288 +1,165 @@
-"use client";
-import React, { useEffect, useState } from "react";
+'use client'
 
-type Course = {
-    id: number;
-    sku: string;
-    title: string;
-    description?: string | null;
-    price: number;
-    active: boolean;
-    createdAt?: string;
-    updatedAt?: string;
-};
-
-function adminFetch(url: string, opts: RequestInit = {}) {
-    const key = typeof window !== "undefined" ? localStorage.getItem("admin_key") : "";
-    const headers = { ...(opts.headers || {}), "Content-Type": "application/json" } as any;
-    if (key) headers["x-admin-key"] = key;
-    return fetch(url, { ...opts, headers, credentials: "same-origin" });
-}
+import { useState } from "react";
+import { CourseList } from "../components/admin/course/CourseList";
+import { CourseForm } from "../components/admin/course/CourseForm";
+import { useCourses } from "../components/admin/course/useCourse";
+import { TeacherList } from "../components/admin/teacher/TeacherList";
+import { TeacherForm } from "../components/admin/teacher/TeacherForm";
+import { useTeachers } from "../components/admin/teacher/useTeacher";
+import { LoginForm } from "./login/LoginForm";
 
 export default function AdminPage() {
     const [adminKey, setAdminKey] = useState<string | null>(() =>
         typeof window !== "undefined" ? localStorage.getItem("admin_key") : null
     );
-    const [loggedIn, setLoggedIn] = useState<boolean>(() => !!(typeof window !== "undefined" && localStorage.getItem("admin_key")));
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [loggedIn, setLoggedIn] = useState<boolean>(() => !!adminKey);
 
-    const [openForm, setOpenForm] = useState(false);
+    const { courses, loadCourses, createCourse, updateCourse, deleteCourse } = useCourses(adminKey);
+    const { teachers, loadTeachers, createTeacher, updateTeacher, deleteTeacher } = useTeachers(adminKey);
+
+    const [tab, setTab] = useState<'courses' | 'teachers'>('courses');
+
+    const [openCourseForm, setOpenCourseForm] = useState(false);
     const [editCourse, setEditCourse] = useState<Course | null>(null);
-    const [form, setForm] = useState({ sku: "", title: "", description: "", price: 0, active: true });
+    const [deleteTargetCourse, setDeleteTargetCourse] = useState<Course | null>(null);
 
-    useEffect(() => {
-        if (loggedIn) loadCourses();
-    }, [loggedIn]);
+    const [openTeacherForm, setOpenTeacherForm] = useState(false);
+    const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+    const [deleteTargetTeacher, setDeleteTargetTeacher] = useState<Teacher | null>(null);
 
-    async function tryLogin() {
-        if (!adminKey) return setError("Nhập admin key");
-        localStorage.setItem("admin_key", adminKey);
-        setError(null);
-        try {
-            const res = await adminFetch("/api/courses");
-            if (!res.ok) {
-                localStorage.removeItem("admin_key");
-                setLoggedIn(false);
-                setError("Key không hợp lệ (server trả " + res.status + ")");
-                return;
-            }
-            const json = await res.json().catch(() => ({}));
-            if (json?.ok === false) {
-                localStorage.removeItem("admin_key");
-                setLoggedIn(false);
-                setError(json.error || "Không thể xác thực");
-                return;
-            }
-            setLoggedIn(true);
-            setError(null);
-        } catch (e: any) {
-            localStorage.removeItem("admin_key");
-            setLoggedIn(false);
-            setError(e?.message || "Lỗi kết nối");
-        }
-    }
+    const handleConfirmDeleteTeacher = async () => {
+        if (!deleteTargetTeacher) return;
+        await deleteTeacher(deleteTargetTeacher.id);
+        setDeleteTargetTeacher(null);
+        await loadTeachers();
+    };
 
-    async function loadCourses() {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await adminFetch("/api/courses");
-            if (!res.ok) {
-                const j = await res.json().catch(() => ({}));
-                throw new Error(j?.error || `Failed to load (${res.status})`);
-            }
-            const json = await res.json();
-            if (!json?.ok) throw new Error(json?.error || "Invalid response");
-            setCourses(json.data || []);
-        } catch (e: any) {
-            setError(e?.message || "Load error");
-        } finally {
-            setLoading(false);
-        }
-    }
+    const handleConfirmDeleteCourse = async () => {
+        if (!deleteTargetCourse) return;
+        await deleteCourse(deleteTargetCourse.id);
+        setDeleteTargetCourse(null);
+        await loadCourses();
+    };
 
-    function openCreate() {
-        setEditCourse(null);
-        setForm({ sku: "", title: "", description: "", price: 0, active: true });
-        setOpenForm(true);
-    }
-
-    function openEdit(c: Course) {
-        setEditCourse(c);
-        setForm({ sku: c.sku, title: c.title, description: c.description ?? "", price: c.price, active: c.active });
-        setOpenForm(true);
-    }
-
-    async function handleSave(e?: React.FormEvent) {
-        e?.preventDefault();
-        setError(null);
-        try {
-            if (editCourse) {
-                const res = await adminFetch(`/api/courses/${editCourse.id}`, {
-                    method: "PUT",
-                    body: JSON.stringify(form),
-                });
-                if (!res.ok) {
-                    const j = await res.json().catch(() => ({}));
-                    throw new Error(j?.error || `Update failed ${res.status}`);
-                }
-            } else {
-                const res = await adminFetch(`/api/courses`, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        sku: form.sku,
-                        title: form.title,
-                        description: form.description,
-                        price: Math.round(Number(form.price) || 0),
-                        active: form.active,
-                    }),
-                });
-                if (!res.ok) {
-                    const j = await res.json().catch(() => ({}));
-                    throw new Error(j?.error || `Create failed ${res.status}`);
-                }
-            }
-            setOpenForm(false);
-            await loadCourses();
-        } catch (err: any) {
-            setError(err?.message || "Save error");
-        }
-    }
-
-    async function handleDelete(c: Course) {
-        if (!confirm(`Xóa khoá học "${c.title}"?`)) return;
-        setError(null);
-        try {
-            const res = await adminFetch(`/api/courses/${c.id}`, { method: "DELETE" });
-            if (!res.ok) {
-                const j = await res.json().catch(() => ({}));
-                throw new Error(j?.error || `Delete failed ${res.status}`);
-            }
-            await loadCourses();
-        } catch (err: any) {
-            setError(err?.message || "Delete error");
-        }
-    }
-
-    if (!loggedIn) {
-        return (
-            <div className="min-h-screen grid place-items-center bg-gray-50 p-6">
-                <div className="w-full max-w-md bg-white p-6 rounded shadow">
-                    <h2 className="text-xl font-semibold mb-4">Admin login</h2>
-                    <label className="block mb-3">
-                        <div className="text-sm mb-1">Admin key</div>
-                        <input
-                            value={adminKey ?? ""}
-                            onChange={(e) => setAdminKey(e.target.value)}
-                            className="w-full rounded border px-3 py-2"
-                            placeholder="Nhập admin key"
-                        />
-                    </label>
-                    {error && <div className="text-red-600 mb-3">{error}</div>}
-                    <div className="flex justify-end gap-2">
-                        <button onClick={() => setAdminKey("dev123")} className="px-3 py-2 rounded border text-sm">
-                            Fill dev key
-                        </button>
-                        <button onClick={tryLogin} className="px-4 py-2 rounded bg-black text-white">
-                            Sign in
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    if (!loggedIn) return <LoginForm setAdminKey={setAdminKey} setLoggedIn={setLoggedIn} />;
 
     return (
-        <div className="min-h-screen bg-white text-gray-900 p-6">
-            <div className="max-w-5xl mx-auto">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Admin — Courses</h1>
-                    <div className="flex items-center gap-3">
-                        <button onClick={openCreate} className="rounded-lg border px-4 py-2 text-sm">
-                            New Course
-                        </button>
-                        <button onClick={() => { localStorage.removeItem("admin_key"); setLoggedIn(false); }} className="rounded-lg border px-4 py-2 text-sm text-red-600">
-                            Logout
-                        </button>
-                    </div>
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="max-w-6xl mx-auto">
+                <header className="flex items-center justify-between mb-6">
+                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                    <button
+                        className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                        onClick={() => { localStorage.removeItem("admin_key"); setLoggedIn(false); }}
+                    >
+                        Logout
+                    </button>
+                </header>
+
+                {/* Tabs */}
+                <div className="flex gap-4 mb-4 border-b">
+                    <button
+                        className={`px-4 py-2 font-medium ${tab === 'courses' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                        onClick={() => setTab('courses')}
+                    >
+                        Courses
+                    </button>
+                    <button
+                        className={`px-4 py-2 font-medium ${tab === 'teachers' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+                        onClick={() => setTab('teachers')}
+                    >
+                        Teachers
+                    </button>
                 </div>
 
-                <div className="mt-6">
-                    {error && <div className="text-red-600 mb-3">{error}</div>}
-                    <div className="rounded-lg border p-4 bg-gray-50">
-                        {loading ? (
-                            <div>Loading...</div>
-                        ) : courses.length === 0 ? (
-                            <div>No courses yet</div>
-                        ) : (
-                            <div className="space-y-3">
-                                {courses.map((c) => (
-                                    <div key={c.id} className="bg-white p-4 rounded-md shadow-sm">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="text-lg font-semibold">{c.title}</div>
-                                                {c.description ? <div className="mt-1 text-sm text-gray-700">{c.description}</div> : null}
-                                                <div className="mt-2 text-sm text-gray-600">
-                                                    SKU: {c.sku} • Price: {c.price.toLocaleString("vi-VN")}₫ • {c.active ? "Active" : "Inactive"}
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 ml-4">
-                                                <button onClick={() => openEdit(c)} className="px-3 py-1 rounded border text-sm">Edit</button>
-                                                <button onClick={() => handleDelete(c)} className="px-3 py-1 rounded border text-sm text-red-600">Delete</button>
-                                            </div>
-                                        </div>
+                {/* Content */}
+                {tab === 'courses' && (
+                    <div>
+                        <div className="flex justify-end mb-3">
+                            <button
+                                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                onClick={() => { setEditCourse(null); setOpenCourseForm(true); }}
+                            >
+                                New Course
+                            </button>
+                        </div>
+
+                        <CourseList
+                            courses={courses}
+                            onEdit={(c) => { setEditCourse(c); setOpenCourseForm(true); }}
+                            onDelete={(c) => setDeleteTargetCourse(c)}
+                        />
+
+                        {openCourseForm && (
+                            <CourseForm
+                                course={editCourse}
+                                teachers={teachers || []}
+                                onSave={async (data) => {
+                                    if (editCourse) await updateCourse(editCourse.id, data);
+                                    else await createCourse(data);
+                                    setOpenCourseForm(false);
+                                    await loadCourses();
+                                }}
+                                onClose={() => setOpenCourseForm(false)}
+                            />
+                        )}
+
+                        {deleteTargetCourse && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                                <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                                    <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                                    <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetCourse.title} không?</p>
+                                    <div className="flex justify-end gap-3">
+                                        <button onClick={() => setDeleteTargetCourse(null)} className="px-4 py-2 rounded border">Hủy</button>
+                                        <button onClick={handleConfirmDeleteCourse} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
                                     </div>
-                                ))}
+                                </div>
                             </div>
                         )}
                     </div>
-                </div>
+                )}
 
-                {/* Modal form */}
-                {openForm && (
-                    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-                        <form onSubmit={handleSave} className="w-full max-w-lg bg-white rounded-xl p-6 shadow-lg">
-                            <h2 className="text-lg font-semibold mb-4">{editCourse ? "Edit Course" : "Create Course"}</h2>
+                {tab === 'teachers' && (
+                    <div>
+                        <div className="flex justify-end mb-3">
+                            <button
+                                className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                                onClick={() => { setEditTeacher(null); setOpenTeacherForm(true); }}
+                            >
+                                New Teacher
+                            </button>
+                        </div>
+                        <TeacherList
+                            teachers={teachers}
+                            onEdit={(t) => { setEditTeacher(t); setOpenTeacherForm(true); }}
+                            onDelete={(t) => setDeleteTargetTeacher(t)}
+                        />
+                        {openTeacherForm && (
+                            <TeacherForm
+                                teacher={editTeacher}
+                                onSave={async (data) => {
+                                    if (editTeacher) await updateTeacher(editTeacher.id, data);
+                                    else await createTeacher(data);
+                                    setOpenTeacherForm(false);
+                                    await loadTeachers();
+                                }}
+                                onClose={() => setOpenTeacherForm(false)}
+                            />
+                        )}
 
-                            <label className="text-sm block mb-2">
-                                SKU
-                                <input
-                                    value={form.sku}
-                                    onChange={(e) => setForm((s) => ({ ...s, sku: e.target.value }))}
-                                    className="mt-1 w-full rounded border px-3 py-2"
-                                    disabled={!!editCourse}
-                                />
-                            </label>
-
-                            <label className="text-sm block mb-2">
-                                Title
-                                <input
-                                    value={form.title}
-                                    onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
-                                    className="mt-1 w-full rounded border px-3 py-2"
-                                />
-                            </label>
-
-                            <label className="text-sm block mb-2">
-                                Description
-                                <textarea
-                                    value={form.description}
-                                    onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
-                                    className="mt-1 w-full rounded border px-3 py-2"
-                                    rows={4}
-                                />
-                            </label>
-
-                            <label className="text-sm block mb-2">
-                                Price (VND)
-                                <input
-                                    type="number"
-                                    value={form.price}
-                                    onChange={(e) => setForm((s) => ({ ...s, price: Number(e.target.value) }))}
-                                    className="mt-1 w-full rounded border px-3 py-2"
-                                />
-                            </label>
-
-                            <label className="flex items-center gap-2 text-sm mt-2">
-                                <input
-                                    type="checkbox"
-                                    checked={form.active}
-                                    onChange={(e) => setForm((s) => ({ ...s, active: e.target.checked }))}
-                                />
-                                Active
-                            </label>
-
-                            <div className="mt-4 flex gap-3 justify-end">
-                                <button type="button" onClick={() => setOpenForm(false)} className="px-4 py-2 rounded border">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="px-4 py-2 rounded bg-black text-white">
-                                    {editCourse ? "Save" : "Create"}
-                                </button>
+                        {deleteTargetTeacher && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                                <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                                    <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                                    <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetTeacher.name} không?</p>
+                                    <div className="flex justify-end gap-3">
+                                        <button onClick={() => setDeleteTargetTeacher(null)} className="px-4 py-2 rounded border">Hủy</button>
+                                        <button onClick={handleConfirmDeleteTeacher} className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+                        )}
                     </div>
                 )}
             </div>
