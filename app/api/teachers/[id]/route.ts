@@ -4,36 +4,38 @@ import cloudinary from "@/lib/cloudinary";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
-    const formData = await req.formData();
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
+    if (isNaN(id))
+      return NextResponse.json(
+        { ok: false, error: "INVALID_ID" },
+        { status: 400 }
+      );
 
+    const formData = await req.formData();
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const education = formData.get("education") as string;
     const achievements = formData.get("achievements") as string;
-    const file = formData.get("avatar") as File | null;
 
+    const avatarFile = formData.get("avatar");
     let avatarUrl: string | undefined;
-
-    if (file && (file as any).size > 0) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
+    if (avatarFile instanceof File && avatarFile.size > 0) {
+      const buffer = Buffer.from(await avatarFile.arrayBuffer());
       const uploadRes = await new Promise<{ secure_url: string }>(
         (resolve, reject) => {
           cloudinary.uploader
-            .upload_stream({ folder: "teachers" }, (error, result) => {
-              if (error || !result) return reject(error);
-              resolve(result as any);
+            .upload_stream({ folder: "teachers" }, (err, result) => {
+              if (err || !result) return reject(err);
+              resolve(result as { secure_url: string });
             })
             .end(buffer);
         }
       );
-
       avatarUrl = uploadRes.secure_url;
     }
 
@@ -45,7 +47,7 @@ export async function PUT(
         phone,
         education,
         achievements,
-        ...(avatarUrl ? { avatarUrl } : {}), // chỉ cập nhật avatar nếu có upload mới
+        ...(avatarUrl ? { avatarUrl } : {}),
       },
     });
 
@@ -61,17 +63,10 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const id = Number(params.id);
-    await prisma.teacher.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("DELETE /api/teachers/:id error", e);
-    return NextResponse.json(
-      { ok: false, error: "SERVER_ERROR" },
-      { status: 500 }
-    );
-  }
+  const { id: idStr } = await params;
+  const id = Number(idStr);
+  await prisma.teacher.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
 }

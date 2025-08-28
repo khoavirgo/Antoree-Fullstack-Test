@@ -45,12 +45,13 @@ export default function AdminPage() {
     if (!loggedIn) return <LoginForm setAdminKey={setAdminKey} setLoggedIn={setLoggedIn} />;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 p-6">
             <div className="max-w-6xl mx-auto">
-                <header className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                {/* Header */}
+                <header className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl md:text-4xl font-bold text-indigo-600">Admin Dashboard</h1>
                     <button
-                        className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                        className="px-4 py-2 rounded-full bg-red-600 text-white font-semibold hover:bg-red-700 shadow transition"
                         onClick={() => {
                             localStorage.removeItem("admin_key");
                             setLoggedIn(false);
@@ -61,16 +62,20 @@ export default function AdminPage() {
                 </header>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-4 border-b">
+                <div className="flex gap-4 mb-6 border-b">
                     <button
-                        className={`px-4 py-2 font-medium ${tab === "courses" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                        className={`px-5 py-2 font-medium rounded-t-lg transition ${tab === "courses"
+                            ? "bg-indigo-50 border-t-2 border-indigo-600 text-indigo-700"
+                            : "text-gray-600 hover:text-gray-800"
                             }`}
                         onClick={() => setTab("courses")}
                     >
                         Courses
                     </button>
                     <button
-                        className={`px-4 py-2 font-medium ${tab === "teachers" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                        className={`px-5 py-2 font-medium rounded-t-lg transition ${tab === "teachers"
+                            ? "bg-indigo-50 border-t-2 border-indigo-600 text-indigo-700"
+                            : "text-gray-600 hover:text-gray-800"
                             }`}
                         onClick={() => setTab("teachers")}
                     >
@@ -81,9 +86,9 @@ export default function AdminPage() {
                 {/* Content */}
                 {tab === "courses" && (
                     <div>
-                        <div className="flex justify-end mb-3">
+                        <div className="flex justify-end mb-4">
                             <button
-                                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow transition"
                                 onClick={() => {
                                     setEditCourse(null);
                                     setOpenCourseForm(true);
@@ -117,19 +122,22 @@ export default function AdminPage() {
                         )}
 
                         {deleteTargetCourse && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                                <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-                                    <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
-                                    <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetCourse.title} không?</p>
-                                    <div className="flex justify-end gap-3">
-                                        <button onClick={() => setDeleteTargetCourse(null)} className="px-4 py-2 rounded border">
-                                            Hủy
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+                                <div className="bg-white p-6 rounded-2xl shadow-lg w-80 text-center">
+                                    <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                                    <p className="mb-6">Are you sure you want to delete <span className="font-medium">{deleteTargetCourse.title}</span>?</p>
+                                    <div className="flex justify-center gap-4">
+                                        <button
+                                            onClick={() => setDeleteTargetCourse(null)}
+                                            className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition"
+                                        >
+                                            Cancel
                                         </button>
                                         <button
                                             onClick={handleConfirmDeleteCourse}
-                                            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                                            className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
                                         >
-                                            Xóa
+                                            Delete
                                         </button>
                                     </div>
                                 </div>
@@ -140,9 +148,9 @@ export default function AdminPage() {
 
                 {tab === "teachers" && (
                     <div>
-                        <div className="flex justify-end mb-3">
+                        <div className="flex justify-end mb-4">
                             <button
-                                className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                                className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow transition"
                                 onClick={() => {
                                     setEditTeacher(null);
                                     setOpenTeacherForm(true);
@@ -175,21 +183,22 @@ export default function AdminPage() {
                         )}
 
                         {deleteTargetTeacher && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                                <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-                                    <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
-                                    <p className="mb-4">Bạn có chắc muốn xóa {deleteTargetTeacher.name} không?</p>
-                                    <div className="flex justify-end gap-3">
-                                        <button onClick={() => setDeleteTargetTeacher(null)} className="px-4 py-2 rounded border">
-                                            Hủy
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+                                <div className="bg-white p-6 rounded-2xl shadow-lg w-80 text-center">
+                                    <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                                    <p className="mb-6">Are you sure you want to delete <span className="font-medium">{deleteTargetTeacher.name}</span>?</p>
+                                    <div className="flex justify-center gap-4">
+                                        <button
+                                            onClick={() => setDeleteTargetTeacher(null)}
+                                            className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition"
+                                        >
+                                            Cancel
                                         </button>
                                         <button
-                                            onClick={async () => {
-                                                await handleConfirmDeleteTeacher();
-                                            }}
-                                            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                                            onClick={handleConfirmDeleteTeacher}
+                                            className="px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
                                         >
-                                            Xóa
+                                            Delete
                                         </button>
                                     </div>
                                 </div>

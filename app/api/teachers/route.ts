@@ -27,25 +27,22 @@ export async function POST(req: Request) {
     const phone = formData.get("phone") as string;
     const education = formData.get("education") as string;
     const achievements = formData.get("achievements") as string;
-    const file = formData.get("avatar") as File | null;
 
+    const avatarFile = formData.get("avatar");
     let avatarUrl: string | undefined;
 
-    if (file) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
+    if (avatarFile instanceof File && avatarFile.size > 0) {
+      const buffer = Buffer.from(await avatarFile.arrayBuffer());
       const uploadRes = await new Promise<{ secure_url: string }>(
         (resolve, reject) => {
           cloudinary.uploader
-            .upload_stream({ folder: "teachers" }, (error, result) => {
-              if (error || !result) return reject(error);
-              resolve(result as any);
+            .upload_stream({ folder: "teachers" }, (err, result) => {
+              if (err || !result) return reject(err);
+              resolve(result as { secure_url: string });
             })
             .end(buffer);
         }
       );
-
       avatarUrl = uploadRes.secure_url;
     }
 
@@ -56,7 +53,7 @@ export async function POST(req: Request) {
         phone,
         education,
         achievements,
-        avatarUrl,
+        ...(avatarUrl ? { avatarUrl } : {}),
       },
     });
 
