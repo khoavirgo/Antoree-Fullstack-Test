@@ -17,14 +17,7 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
         teacherId: course?.teacherId ?? undefined,
     });
 
-    const [errors, setErrors] = useState<{
-        sku?: string;
-        title?: string;
-        description?: string;
-        teacherId?: string;
-        price?: string;
-    }>({});
-
+    const [errorField, setErrorField] = useState<string | null>(null);
 
     useEffect(() => {
         if (course) setForm({ ...course });
@@ -32,53 +25,62 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
 
     const validate = () => {
         if (!form.sku.trim()) {
-            setErrors({ sku: "Mã khóa học không được để trống" });
+            setErrorField("sku");
             return false;
         }
         if (!form.title.trim()) {
-            setErrors({ title: "Tên khóa học không được để trống" });
+            setErrorField("title");
             return false;
         }
         if (!form.description.trim()) {
-            setErrors({ description: "Mô tả không được để trống" });
+            setErrorField("description");
             return false;
         }
         if (!form.teacherId) {
-            setErrors({ teacherId: "Bạn phải chọn một giáo viên" });
+            setErrorField("teacherId");
             return false;
         }
         if (form.price <= 0) {
-            setErrors({ price: "Giá tiền phải lớn hơn 0" });
+            setErrorField("price");
             return false;
         }
-
-        setErrors({});
+        setErrorField(null);
         return true;
     };
 
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
         if (validate()) onSave(form);
+    };
+
+    const renderError = (field: string, message: string) => {
+        if (errorField === field) {
+            return <p className="text-red-600 text-sm mt-1">{message}</p>;
+        }
+        return null;
     };
 
     return (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white rounded-xl p-6 shadow-lg space-y-4">
-                <h2 className="text-2xl font-semibold mb-4">{course ? "Edit Course" : "Create Course"}</h2>
+            <form
+                onSubmit={handleSubmit}
+                className="w-full max-w-lg bg-white rounded-xl p-6 shadow-lg space-y-4"
+            >
+                <h2 className="text-2xl font-semibold mb-4">
+                    {course ? "Edit Course" : "Create Course"}
+                </h2>
 
                 {/* SKU */}
                 <label className="block">
                     SKU
                     <input
                         value={form.sku}
-                        onChange={(e) => setForm(s => ({ ...s, sku: e.target.value }))}
+                        onChange={(e) => setForm((s) => ({ ...s, sku: e.target.value }))}
                         className="mt-1 w-full rounded border px-3 py-2 focus:outline-blue-500"
                         disabled={!!course}
                         placeholder="Nhập mã khóa học"
                     />
-                    {errors.sku && <p className="text-red-600 text-sm mt-1">{errors.sku}</p>}
+                    {renderError("sku", "Mã khóa học không được để trống")}
                 </label>
 
                 {/* Title */}
@@ -86,11 +88,11 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                     Title
                     <input
                         value={form.title}
-                        onChange={(e) => setForm(s => ({ ...s, title: e.target.value }))}
+                        onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
                         className="mt-1 w-full rounded border px-3 py-2 focus:outline-blue-500"
                         placeholder="Nhập tên khóa học"
                     />
-                    {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
+                    {renderError("title", "Tên khóa học không được để trống")}
                 </label>
 
                 {/* Description */}
@@ -98,12 +100,14 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                     Description
                     <textarea
                         value={form.description}
-                        onChange={(e) => setForm(s => ({ ...s, description: e.target.value }))}
+                        onChange={(e) =>
+                            setForm((s) => ({ ...s, description: e.target.value }))
+                        }
                         className="mt-1 w-full rounded border px-3 py-2 focus:outline-blue-500"
                         rows={4}
                         placeholder="Mô tả khóa học..."
                     />
-                    {errors.description && <p className="text-red-600 text-sm mt-1">{errors.description}</p>}
+                    {renderError("description", "Mô tả không được để trống")}
                 </label>
 
                 {/* Teacher */}
@@ -111,13 +115,19 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                     Teacher
                     <select
                         value={form.teacherId ?? ""}
-                        onChange={e => setForm(s => ({ ...s, teacherId: Number(e.target.value) }))}
+                        onChange={(e) =>
+                            setForm((s) => ({ ...s, teacherId: Number(e.target.value) }))
+                        }
                         className="mt-1 w-full rounded border px-3 py-2 focus:outline-blue-500"
                     >
                         <option value="">-- Chọn giáo viên --</option>
-                        {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        {teachers.map((t) => (
+                            <option key={t.id} value={t.id}>
+                                {t.name}
+                            </option>
+                        ))}
                     </select>
-                    {errors.teacherId && <p className="text-red-600 text-sm mt-1">{errors.teacherId}</p>}
+                    {renderError("teacherId", "Bạn phải chọn một giáo viên")}
                 </label>
 
                 {/* Price */}
@@ -129,14 +139,16 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                             min={0}
                             step={1000}
                             value={form.price}
-                            onChange={(e) => setForm(s => ({ ...s, price: Number(e.target.value) || 0 }))}
+                            onChange={(e) =>
+                                setForm((s) => ({ ...s, price: Number(e.target.value) || 0 }))
+                            }
                             className="w-full rounded-l border px-3 py-2 focus:outline-blue-500"
                         />
                         <span className="bg-gray-100 border border-l-0 rounded-r px-3 py-2 flex items-center text-gray-600">
                             VND
                         </span>
-                        {errors.price && <p className="text-red-600 text-sm mt-1">{errors.price}</p>}
                     </div>
+                    {renderError("price", "Giá tiền phải lớn hơn 0")}
                 </label>
 
                 {/* Active */}
@@ -144,7 +156,9 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                     <input
                         type="checkbox"
                         checked={form.active}
-                        onChange={(e) => setForm(s => ({ ...s, active: e.target.checked }))}
+                        onChange={(e) =>
+                            setForm((s) => ({ ...s, active: e.target.checked }))
+                        }
                         className="accent-blue-600"
                     />
                     Active
@@ -152,10 +166,17 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
 
                 {/* Buttons */}
                 <div className="mt-4 flex gap-3 justify-end">
-                    <button type="button" onClick={onClose} className="px-4 py-2 rounded border hover:bg-gray-100">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 rounded border hover:bg-gray-100"
+                    >
                         Cancel
                     </button>
-                    <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
+                    <button
+                        type="submit"
+                        className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
                         {course ? "Save" : "Create"}
                     </button>
                 </div>
