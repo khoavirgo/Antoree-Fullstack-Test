@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import LeadModal from "./LeadModal";
+import OrderLeadModal from "./OrderLeadModal";
 import { postJSON, getJSON } from "@/lib/fetcher";
 import { CheckCircle, X } from "lucide-react";
 
@@ -8,12 +9,14 @@ export default function LandingPage() {
     const [openLead, setOpenLead] = useState(false)
     const [toast, setToast] = useState<{ msg: string } | null>(null)
     const [plans, setPlans] = useState<Plan[]>([])
+    const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
 
     useEffect(() => {
         async function load() {
             const res = await getJSON("/api/courses");
             if (res?.ok && Array.isArray(res.data)) {
                 const mapped = res.data.map((c: any) => ({
+                    id: c.id,
                     name: c.title,
                     price: c.price === 0 ? "0₫" : `${c.price.toLocaleString("vi-VN")}₫`,
                     tagline: c.description ? (c.description.length > 120 ? c.description.slice(0, 117) + "..." : c.description) : "",
@@ -23,9 +26,9 @@ export default function LandingPage() {
                 setPlans(mapped);
             } else {
                 setPlans([
-                    { name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài học mẫu", "Không cần thẻ tín dụng"], ctaLabel: "Bắt đầu miễn phí" },
-                    { name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["50+ bài giảng", "Lộ trình học 3 tháng", "Hỗ trợ giảng viên"], ctaLabel: "Đăng ký Standard" },
-                    { name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền nếu không đạt", features: ["Tất cả từ Standard", "Kèm 1-1 hàng tuần", "Thi thử & feedback cá nhân"], ctaLabel: "Đăng ký Premium" },
+                    { id: 0, name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài học mẫu", "Không cần thẻ tín dụng"], ctaLabel: "Bắt đầu miễn phí" },
+                    { id: 1, name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["50+ bài giảng", "Lộ trình học 3 tháng", "Hỗ trợ giảng viên"], ctaLabel: "Đăng ký Standard" },
+                    { id: 2, name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền nếu không đạt", features: ["Tất cả từ Standard", "Kèm 1-1 hàng tuần", "Thi thử & feedback cá nhân"], ctaLabel: "Đăng ký Premium" },
                 ]);
             }
         }
@@ -117,14 +120,36 @@ export default function LandingPage() {
                             >
                                 {p.ctaLabel}
                             </button>
-                        </div>
 
+                            <button
+                                onClick={() => {
+                                    setSelectedCourse(p.id); // lấy đúng id
+                                    setOpenLead(true);
+                                    track("purchase_click", { plan: p.name });
+                                }}
+                                className="mt-2 w-full px-5 py-3 rounded-xl border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer"
+                            >
+                                Đặt mua
+                            </button>
+                        </div>
                     ))}
                 </div>
             </section>
 
-            {/* Modal */}
+            {/* Modal đăng ký tư vấn*/}
             {openLead && <LeadModal onClose={() => setOpenLead(false)} />}
+
+            {/* Modal đặt mua */}
+            {openLead && selectedCourse && (
+                <OrderLeadModal
+                    onClose={() => {
+                        setOpenLead(false);
+                        setSelectedCourse(null);
+                    }}
+                    courseId={selectedCourse}
+                    setToast={setToast}
+                />
+            )}
 
             {/* Toast */}
             {toast && (

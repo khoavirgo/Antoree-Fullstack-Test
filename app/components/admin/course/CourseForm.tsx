@@ -109,8 +109,8 @@ export function CourseForm({ course, teachers, onSave, onClose }: Props) {
                         <div className="mt-1 flex">
                             <input
                                 type="number"
-                                min={0}
-                                step={1000}
+                                step={100_000}
+                                max={100_000_000}
                                 value={form.price}
                                 onChange={(e) => setForm((s) => ({ ...s, price: Number(e.target.value) || 0 }))}
                                 className="w-full rounded-l border px-3 py-2 focus:outline-blue-500"

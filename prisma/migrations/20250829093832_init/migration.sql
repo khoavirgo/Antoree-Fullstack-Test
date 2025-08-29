@@ -58,13 +58,16 @@ CREATE TABLE `Order` (
     `leadId` INTEGER NULL,
     `courseId` INTEGER NULL,
     `amount` INTEGER NOT NULL,
-    `status` VARCHAR(191) NOT NULL DEFAULT 'pending',
+    `status` VARCHAR(191) NOT NULL DEFAULT 'paid',
     `provider` VARCHAR(191) NULL,
     `providerId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `paymentAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `currency` VARCHAR(191) NOT NULL DEFAULT 'VND',
 
     INDEX `Order_status_idx`(`status`),
     INDEX `Order_courseId_idx`(`courseId`),
+    INDEX `Order_paymentAt_idx`(`paymentAt`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
