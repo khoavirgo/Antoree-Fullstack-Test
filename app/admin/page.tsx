@@ -8,6 +8,7 @@ import { TeacherList } from "../components/admin/teacher/TeacherList";
 import TeacherForm from "../components/admin/teacher/TeacherForm";
 import { useTeachers } from "../components/admin/teacher/useTeacher";
 import { LoginForm } from "./login/LoginForm";
+import DashboardChart from "../components/admin/Dashboard";
 
 export default function AdminPage() {
     const [adminKey, setAdminKey] = useState<string | null>(() =>
@@ -18,7 +19,8 @@ export default function AdminPage() {
     const { courses, loadCourses, createCourse, updateCourse, deleteCourse } = useCourses(adminKey);
     const { teachers, loadTeachers, createTeacher, updateTeacher, deleteTeacher } = useTeachers(adminKey);
 
-    const [tab, setTab] = useState<"courses" | "teachers">("courses");
+    const [tab, setTab] = useState<"dashboard" | "courses" | "teachers">("dashboard");
+
 
     const [openCourseForm, setOpenCourseForm] = useState(false);
     const [editCourse, setEditCourse] = useState<Course | null>(null);
@@ -80,6 +82,16 @@ export default function AdminPage() {
                         onClick={() => setTab("teachers")}
                     >
                         Teachers
+                    </button>
+
+                    <button
+                        className={`px-5 py-2 font-medium rounded-t-lg transition ${tab === "dashboard"
+                            ? "bg-indigo-50 border-t-2 border-indigo-600 text-indigo-700"
+                            : "text-gray-600 hover:text-gray-800"
+                            }`}
+                        onClick={() => setTab("dashboard")}
+                    >
+                        Dashboard
                     </button>
                 </div>
 
@@ -206,6 +218,7 @@ export default function AdminPage() {
                         )}
                     </div>
                 )}
+                {tab === "dashboard" && <DashboardChart />}
             </div>
         </div>
     );
