@@ -5,6 +5,7 @@ import { showToast } from "@/lib/toast"
 
 interface OrderLeadModalProps {
   onClose: () => void
+  setToast?: (toast: { msg: string } | null) => void
   courseId?: number
 }
 
