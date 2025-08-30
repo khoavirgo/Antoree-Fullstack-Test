@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const name = String(body.name || "").trim();
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
-    const source = String(body.source || "landing");
+    const source = String(body.source || "Landing page English Lab");
 
     // validation
     const emailOk = email.includes("@") && email.includes(".");
@@ -38,7 +38,19 @@ export async function POST(req: Request) {
     <li>Nguồn: ${source}</li>
   </ul>
   
-  <p>Nếu có thắc mắc hoặc cần hỗ trợ ngay, bạn có thể liên hệ với chúng tôi qua email <a href="mailto:support@englishlab.vn">support@englishlab.vn</a> hoặc số hotline <strong>0123 456 789</strong>.</p>
+  <p>Chúng tôi xin được gửi tặng bạn một số tài liệu tiếng Anh như một lời cảm ơn vì sự quan tâm của bạn đến nền tảng của chúng tôi.</p>
+  
+  <p style="text-align:center; margin:20px 0;">
+    <a href="https://drive.google.com/drive/folders/1LiaT1n7tQX1WkDYSAW09wpfzCDOy35os?usp=sharing"
+       style="display:inline-block; background-color:#2563eb; color:#ffffff; 
+              padding:12px 24px; border-radius:8px; text-decoration:none; 
+              font-weight:bold; font-size:16px;">
+      📥 Tải tài liệu
+    </a>
+  </p>
+  
+  <p>Nếu có thắc mắc hoặc cần hỗ trợ ngay, bạn có thể liên hệ với chúng tôi qua email 
+     <a href="mailto:ndangkhoa567@gmail.com">ndangkhoa567@gmail.com</a> hoặc số hotline <strong>0914 932 098</strong>.</p>
   
   <p>Trân trọng,<br/><strong>English Lab Team</strong></p>
 `;
@@ -50,7 +62,7 @@ export async function POST(req: Request) {
   ${phone ? `- Điện thoại: ${phone}` : ""}
   - Nguồn: ${source}
 
-  Chúng tôi sẽ liên hệ bạn sớm. Mọi thắc mắc vui lòng liên hệ support@englishlab.vn
+  Chúng tôi sẽ liên hệ bạn sớm. Mọi thắc mắc vui lòng liên hệ ndangkhoa567@gmail.com
   `;
 
     // send email (try/catch so sending failure doesn't break lead creation)
