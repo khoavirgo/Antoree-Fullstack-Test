@@ -3,13 +3,28 @@ import React, { useEffect, useState } from "react"
 import LeadModal from "./LeadModal";
 import OrderLeadModal from "./OrderLeadModal";
 import { postJSON, getJSON } from "@/lib/fetcher";
-import { CheckCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export default function LandingPage() {
     const [openLead, setOpenLead] = useState(false)
     const [toast, setToast] = useState<{ msg: string } | null>(null)
     const [plans, setPlans] = useState<Plan[]>([])
     const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
+
+    // Hàm track chung
+    const track = (event: string, meta: Record<string, unknown> = {}) => {
+        postJSON("/api/track", { event, ts: Date.now(), page: "landing", ...meta })
+    }
+
+    // Wrapper để track click
+    const handleTrackClick = (
+        event: string,
+        meta: Record<string, unknown> = {},
+        action?: () => void
+    ) => {
+        track(event, meta);
+        if (action) action();
+    };
 
     useEffect(() => {
         async function load() {
@@ -24,12 +39,6 @@ export default function LandingPage() {
                     ctaLabel: "Đăng ký nhận tư vấn",
                 }));
                 setPlans(mapped);
-            } else {
-                setPlans([
-                    { id: 0, name: "Starter", price: "0₫", tagline: "Dùng thử 7 ngày", features: ["2 bài học mẫu", "Không cần thẻ tín dụng"], ctaLabel: "Bắt đầu miễn phí" },
-                    { id: 1, name: "Standard", price: "1.290.000₫", tagline: "Lộ trình TOEIC 700+", features: ["50+ bài giảng", "Lộ trình học 3 tháng", "Hỗ trợ giảng viên"], ctaLabel: "Đăng ký Standard" },
-                    { id: 2, name: "Premium", price: "2.890.000₫", tagline: "Cam kết hoàn tiền nếu không đạt", features: ["Tất cả từ Standard", "Kèm 1-1 hàng tuần", "Thi thử & feedback cá nhân"], ctaLabel: "Đăng ký Premium" },
-                ]);
             }
         }
         load();
@@ -39,24 +48,24 @@ export default function LandingPage() {
         const key = "lp_traffic_seen"
         if (!localStorage.getItem(key)) {
             localStorage.setItem(key, "1")
-            postJSON("/api/track", { event: "visit", ts: Date.now(), page: "landing" })
+            track("visit")
         }
     }, [])
-
-    const track = (event: string, meta: Record<string, unknown> = {}) => {
-        postJSON("/api/track", { event, ts: Date.now(), page: "landing", ...meta })
-    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-900">
             {/* Header */}
             <header className="sticky top-0 z-40 bg-white/70 backdrop-blur border-b border-gray-200">
                 <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-                    <a href="#top" className="font-extrabold text-xl text-indigo-600 tracking-tight">
+                    <a
+                        href="#top"
+                        className="font-extrabold text-xl text-indigo-600 tracking-tight"
+                        onClick={() => handleTrackClick("logo_click")}
+                    >
                         English Lab
                     </a>
                     <button
-                        onClick={() => setOpenLead(true)}
+                        onClick={() => handleTrackClick("cta_header_consult", {}, () => setOpenLead(true))}
                         className="rounded-full border border-gray-300 px-5 py-2 text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition text-gray-900 cursor-pointer"
                     >
                         Đăng ký nhận tư vấn
@@ -74,12 +83,16 @@ export default function LandingPage() {
                 </p>
                 <div className="mt-6 flex justify-center gap-4">
                     <button
-                        onClick={() => setOpenLead(true)}
+                        onClick={() => handleTrackClick("cta_hero_start", {}, () => setOpenLead(true))}
                         className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md transition cursor-pointer"
                     >
                         Bắt đầu ngay
                     </button>
-                    <a href="#pricing" className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition">
+                    <a
+                        href="#pricing"
+                        className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition"
+                        onClick={() => handleTrackClick("cta_hero_view_pricing")}
+                    >
                         Xem các gói học
                     </a>
                 </div>
@@ -90,14 +103,13 @@ export default function LandingPage() {
                 <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900">Chọn gói học phù hợp</h2>
                 <div className="mt-10 grid md:grid-cols-3 gap-6">
                     {plans.map((p) => (
-                        <div key={p.name} className="rounded-2xl border p-6 bg-gray-50 border-gray-200 shadow hover:shadow-lg transition">
+                        <div key={p.id} className="rounded-2xl border p-6 bg-gray-50 border-gray-200 shadow hover:shadow-lg transition">
                             <div className="flex items-baseline justify-between">
                                 <div className="text-lg font-semibold text-gray-800">{p.name}</div>
                                 <div className="text-xl font-bold text-gray-900">{p.price}</div>
                             </div>
                             <div className="mt-1 text-sm text-gray-600">{p.tagline}</div>
 
-                            {/* ⭐ Mock review */}
                             <div className="mt-3 flex items-center gap-2 text-yellow-500">
                                 {Array.from({ length: 5 }, (_, i) => (
                                     <span key={i}>★</span>
@@ -112,21 +124,17 @@ export default function LandingPage() {
                             </ul>
 
                             <button
-                                onClick={() => {
-                                    setOpenLead(true);
-                                    track("cta_choose_plan", { plan: p.name });
-                                }}
+                                onClick={() => handleTrackClick("cta_plan_consult", { plan: p.name }, () => setOpenLead(true))}
                                 className="mt-6 w-full px-5 py-3 rounded-xl border border-gray-300 bg-black text-white hover:opacity-90 transition cursor-pointer"
                             >
                                 {p.ctaLabel}
                             </button>
 
                             <button
-                                onClick={() => {
-                                    setSelectedCourse(p.id); // lấy đúng id
+                                onClick={() => handleTrackClick("cta_plan_buy", { plan: p.name }, () => {
+                                    setSelectedCourse(p.id);
                                     setOpenLead(true);
-                                    track("purchase_click", { plan: p.name });
-                                }}
+                                })}
                                 className="mt-2 w-full px-5 py-3 rounded-xl border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer"
                             >
                                 Đặt mua
@@ -137,12 +145,16 @@ export default function LandingPage() {
             </section>
 
             {/* Modal đăng ký tư vấn*/}
-            {openLead && <LeadModal onClose={() => setOpenLead(false)} />}
+            {openLead && <LeadModal onClose={() => {
+                track("modal_consult_close")
+                setOpenLead(false)
+            }} />}
 
             {/* Modal đặt mua */}
             {openLead && selectedCourse && (
                 <OrderLeadModal
                     onClose={() => {
+                        track("modal_order_close", { courseId: selectedCourse })
                         setOpenLead(false);
                         setSelectedCourse(null);
                     }}
@@ -155,7 +167,9 @@ export default function LandingPage() {
             {toast && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl bg-black text-white px-4 py-3 shadow-lg flex items-center gap-2">
                     <span>{toast.msg}</span>
-                    <button onClick={() => setToast(null)}>
+                    <button
+                        onClick={() => handleTrackClick("toast_close", {}, () => setToast(null))}
+                    >
                         <X className="w-4 h-4 text-white" />
                     </button>
                 </div>
